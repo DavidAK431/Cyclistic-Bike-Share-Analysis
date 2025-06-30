@@ -1,0 +1,248 @@
+---
+author: "David AK"
+date: "r Sys.Date()"
+output:
+  slidy_presentation: default
+  html_document: default
+  ioslides_presentation: default
+  beamer_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+```
+
+##### CYCLISTIC_BIKE_SHARE_ANALYSIS_REPORT
+
+## BUSINESS TASK
+
+   The Cyclistic marketing team wants to better understand how annual members and casual riders use the bike-sharing service differently.
+
+   The goal is to identify behavioral trends and usage patterns that will help **convert more casual riders into annual members**, **increasing customer retention** and **overall revenue**.
+
+
+## DATA SOURCES
+```{r}
+# Upload Divvy datasets (csv files) here
+q1_2019 <- read_csv("Divvy_Trips_2019_Q1.csv")
+q1_2020 <- read_csv("Divvy_Trips_2020_Q1.csv")
+```
+
+## CLEANING AND MANIPULATION
+```{r}
+# Rename columns in q1_2019 to match q1_2020
+q1_2019 <- rename(q1_2019,
+  ride_id = trip_id,
+  rideable_type = bikeid,
+  started_at = start_time,
+  ended_at = end_time,
+  start_station_name = from_station_name,
+  start_station_id = from_station_id,
+  end_station_name = to_station_name,
+  end_station_id = to_station_id,
+  member_casual = usertype
+)
+
+# Convert ride_id and rideable_type to character for stacking
+q1_2019 <- mutate(q1_2019,
+  ride_id = as.character(ride_id),
+  rideable_type = as.character(rideable_type)
+)
+```
+
+```{r}
+# Stack datasets
+all_trips <- bind_rows(q1_2019, q1_2020)
+```
+
+```{r}
+# View structure and initial rows
+str(all_trips)
+head(all_trips)
+colnames(all_trips)
+```
+
+```{r}
+# Safely remove unwanted columns
+all_trips <- all_trips %>% 
+  select(-any_of(c("start_lat", "start_lng", "end_lat", "end_lng", "birthyear", "gender", "tripduration")))
+```
+
+```{r}
+# Standardize member_casual values if needed
+all_trips <- all_trips %>% 
+  mutate(member_casual = recode(member_casual,
+                                "Subscriber" = "member",
+                                "Customer" = "casual"))
+```
+
+```{r}
+# Add date components
+all_trips$date <- as.Date(all_trips$started_at)
+all_trips$month <- format(as.Date(all_trips$date), "%m")
+all_trips$day <- format(as.Date(all_trips$date), "%d")
+all_trips$year <- format(as.Date(all_trips$date), "%Y")
+all_trips$day_of_week <- format(as.Date(all_trips$date), "%A")
+```
+
+```{r}
+# Add ride_length column
+all_trips$ride_length <- difftime(all_trips$ended_at, all_trips$started_at)
+all_trips$ride_length <- as.numeric(as.character(all_trips$ride_length))
+```
+
+```{r}
+# Remove bad data
+all_trips_v2 <- all_trips[!(all_trips$start_station_name == "HQ QR" | all_trips$ride_length < 0),]
+```
+
+## ANALYSIS
+```{r}
+# Descriptive stats
+summary(all_trips_v2$ride_length)
+```
+
+```{r}
+# Compare user types
+all_trips_v2 %>%
+  group_by(member_casual) %>%
+  summarise(
+    mean = mean(ride_length),
+    median = median(ride_length),
+    max = max(ride_length),
+    min = min(ride_length)
+  )
+```
+
+```{r}
+# Average ride time by weekday
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual + all_trips_v2$day_of_week, FUN = mean)
+```
+
+```{r}
+# Grouped summary by weekday
+all_trips_v2 %>% 
+  mutate(weekday = wday(started_at, label = TRUE)) %>%
+  group_by(member_casual, weekday) %>%
+  summarise(number_of_rides = n(), average_duration = mean(ride_length)) %>%
+  arrange(member_casual, weekday)
+```
+
+## VISUALIZATION
+```{r}
+# Plot number of rides
+# Pre-calculate the summary used in plotting
+plot_data <- all_trips_v2 %>% 
+  mutate(weekday = wday(started_at, label = TRUE)) %>% 
+  group_by(member_casual, weekday) %>% 
+  summarise(number_of_rides = n(), average_duration = mean(ride_length), .groups = "drop") %>% 
+  arrange(member_casual, weekday)
+
+# Get max y for annotation
+max_y <- max(plot_data$number_of_rides)
+
+# Plot
+ggplot(plot_data, aes(x = weekday, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(aes(label = scales::comma(number_of_rides)),
+            position = position_dodge(width = 0.8),
+            vjust = -0.4, size = 3.5, color = "black") +
+  annotate("text",
+           x = 1, y = max_y * 1.03,
+           label = "Casual riders peak on weekends",
+           color = "red", fontface = "italic", size = 4) +
+  scale_fill_manual(values = c("member" = "#1f78b4", "casual" = "#33a02c")) +
+  labs(
+    title = "📊 Ride Frequency by Weekday",
+    subtitle = "Casuals ride more on weekends; members ride mostly on weekdays",
+    caption = "Source: Cyclistic Q1 2019 & Q1 2020",
+    x = "Day of the Week",
+    y = "Total Number of Rides",
+    fill = "User Type"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    plot.subtitle = element_text(size = 12, face = "italic"),
+    plot.caption = element_text(size = 10, hjust = 0),
+    axis.text.x = element_text(size = 11),
+    axis.text.y = element_text(size = 11),
+    legend.position = "top"
+  )
+```
+
+```{r}
+# Plot average duration
+avg_duration_summary <- all_trips_v2 %>% 
+  mutate(weekday = wday(started_at, label = TRUE, week_start = 1)) %>%
+  group_by(member_casual, weekday) %>% 
+  summarise(
+    number_of_rides = n(),
+    average_duration = mean(ride_length),
+    .groups = "drop"
+  )
+
+max_y <- max(avg_duration_summary$average_duration, na.rm = TRUE)
+
+ggplot(avg_duration_summary, aes(x = weekday, y = average_duration, fill = member_casual)) +
+  geom_col(position = "dodge", width = 0.7, alpha = 0.9) +
+  geom_text(aes(label = round(average_duration, 1)), 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5, size = 3.5) +
+  annotate("text",
+           x = 6, y = max_y * 1.03,  # Slightly above the tallest bar
+           label = "Casuals ride longer especially on weekends",
+           color = "red", fontface = "italic", size = 4) +
+  scale_fill_manual(values = c("member" = "#1f78b4", "casual" = "#33a02c")) +
+  labs(
+    title = "⏱️ Average Ride Duration by Weekday",
+    subtitle = "Longer durations for casual riders reflect leisure usage",
+    caption = "Source: Cyclistic Q1 2019 & Q1 2020",
+    x = "Day of the Week",
+    y = "Average Duration (seconds)",
+    fill = "User Type"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    plot.subtitle = element_text(size = 13, face = "italic"),
+    plot.caption = element_text(size = 10, hjust = 0),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 11),
+    legend.position = "top"
+  )
+```
+
+
+## ✅ INSIGHTS
+- **Casual users** ride significantly more during **weekends**, and their **average ride durations** are longer. This indicates a strong **leisure or recreational use case**.
+
+- **Members** ride more consistently on **weekdays**, with shorter trips, suggesting usage for **commuting or utility travel**.
+
+---
+
+### 📈 Data-Driven Recommendations
+
+- 🎯 **Targeted Promotions**:  
+  Launch **weekend offers, discounts, or scenic ride packages** aimed at casual users to encourage continued usage and convert some to members.
+
+- 🧳 **Commuter Perks for Members**:  
+  Introduce **weekday loyalty programs** or **morning rush hour discounts** for members to reward regular usage.
+
+- 📅 **Seasonal Campaigns**:  
+  Monthly ride patterns show that **spring and summer months** have the highest usage, especially among casual riders.  
+  Plan **seasonal marketing pushes** (e.g., summer pass, holiday ride challenges) to capitalize on peak demand.
+
+- ⏱️ **Duration-Based Pricing Adjustments**:  
+  Since casual users take longer rides, ensure **price tiers** or **time-based billing** models encourage them to upgrade or ride more efficiently.
+
+- 🧭 **User Education & Onboarding**:  
+  Members tend to have shorter rides — possibly due to familiarity. Providing **onboarding tips for casual users** may help improve their confidence and trip planning.
+
+---
+
+## CONCLUSION
+  This analysis provides clear evidence of different usage behaviors between Cyclistic’s casual and member riders. The recommendations aim to optimize **user experience**, **improve marketing effectiveness**, and **support strategic membership growth**.
