@@ -1,82 +1,110 @@
-# 🚲 Cyclistic Bike-Share Analysis Project
+ # 🚲 Cyclistic Bike-Share Analysis
 
-## 📌 Project Overview
+## 📚 Project Overview
 
-This project is part of the **Google Data Analytics Capstone** and was conducted to help **Cyclistic**, a fictional bike-share company in Chicago, understand how **annual members** and **casual riders** use their service differently. The goal was to provide **data-driven marketing recommendations** to convert more casual riders into paying members and boost long-term revenue.
-
----
-
-## 🎯 Business Task
-
-Cyclistic’s marketing team needs actionable insights on user behavior differences to develop a strategy that encourages **casual riders to become annual members**.
+This repository contains the capstone project for the Google Data Analytics Certificate. The goal of the project is to analyze ride data from Cyclistic, a fictional bike-share company in Chicago, and provide actionable business recommendations to help convert casual riders into annual members.
 
 ---
 
-## 🧩 Dataset
+## 🎯 Business Objective
 
-- 📁 Divvy Bike Share trip data from **Q1 2019 and Q1 2020**
-- Data includes trip timestamps, user types (member or casual), and station names
-- Source: [Divvy](https://divvybikes.com/system-data) 
-
+Cyclistic’s marketing team wants to understand how annual members and casual riders use the service differently. The aim is to uncover actionable insights and recommend strategies to boost membership conversion and long-term revenue.
 
 ---
 
-## 🔧 Tools Used
+## 📦 Data Sources
 
-- **R Programming Language**
-- **Tidyverse** for data cleaning & transformation
-- **Lubridate** for date manipulation
-- **ggplot2** for visualizations
-- **R Markdown** & **Slidy Presentation** for reporting
+- **Divvy Bike Share Trip Data:** Q1 2019 & Q1 2020  
+- Includes: ride timestamps, user types (member/casual), and station names  
+- [Divvy System Data](https://divvybikes.com/system-data)
+
+---
+
+## 🛠️ Tools & Technologies
+
+- **R** (Data wrangling, analysis, visualization)
+- **Tidyverse** (data cleaning & transformation)
+- **lubridate** (date/time handling)
+- **ggplot2** (visualizations)
+- **RMarkdown** / **Slidy** (reporting & presentations)
 
 ---
 
 ## 🧹 Data Cleaning & Preparation
 
-- Merged two datasets from different schema structures (2019 and 2020)
-- Renamed columns for consistency
-- Removed unnecessary fields (e.g., latitude, gender, tripduration)
-- Standardized user type values (`Subscriber` → `member`, `Customer` → `casual`)
-- Added new variables (ride length, weekday, month, etc.)
-- Removed invalid data (e.g., ride duration < 0, HQ QR trips)
+- Merged quarterly datasets with different structures
+- Standardized column names and user types
+- Removed unnecessary fields (e.g., coordinates, demographics)
+- Calculated additional variables (ride length, weekday, etc.)
+- Filtered out invalid and outlier data
 
 ---
 
-## 📊 Key Analysis Performed
+## 📊 Analysis Highlights
 
-- Descriptive statistics of ride durations
-- Comparison of mean/median ride lengths between members and casuals
-- Average ride duration by weekday and user type
-- Number of rides by weekday and user type
-
----
-
-## 📈 Visualizations
-
-- **Ride Frequency by Weekday**  
-  Casual riders show a spike on weekends; members dominate weekdays.
-
-- **Average Ride Duration by Weekday**  
-  Casual riders take significantly longer trips, especially on weekends.
-
-Each chart is annotated and styled for stakeholder clarity.
+- Distribution and statistics of ride durations for each user type
+- Weekday vs. weekend riding trends for members and casuals
+- Average ride duration by day and user type
+- Visualizations illustrating usage patterns
 
 ---
 
-## 💡 Key Insights
+## 🔑 Key Insights
 
-- **Casual riders** prefer weekends and take longer, leisure-focused trips.
-- **Members** ride more during weekdays, likely for commuting.
-- These patterns indicate fundamentally different use cases.
+- **Casual riders** ride longer and prefer weekends (leisure trips)
+- **Members** ride more frequently on weekdays (commuting)
+- Clear behavioral differences support targeted marketing
 
 ---
 
 ## ✅ Recommendations
 
-1. **🎯 Targeted Promotions:** Offer weekend passes and scenic ride campaigns to convert casuals.
-2. **📅 Seasonal Campaigns:** Leverage high casual ridership in summer months for promotions.
-3. **🧭 Onboarding & Education:** Help casual riders navigate and plan better trips, increasing comfort and conversions.
+1. **Targeted Promotions:** Launch weekend and leisure-focused campaigns for casuals.
+2. **Seasonal Marketing:** Use summer peak periods for promotional pushes.
+3. **Onboarding & Education:** Simplify navigation and trip planning for casuals to encourage conversion.
 
 ---
 
-## Cyclistic_bike_share_analysis.html#
+## 🚀 Getting Started
+
+### Prerequisites
+
+- R (>= 4.0)
+- Required packages: `tidyverse`, `lubridate`, `ggplot2`, `readr`, `dplyr`, `knitr`, `rmarkdown`
+
+### Running the Analysis
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/DavidAK431/Cyclistic-Bike-Share-Analysis.git
+   cd Cyclistic-Bike-Share-Analysis
+   ```
+2. Download the Divvy data (see [Divvy System Data](https://divvybikes.com/system-data)) and place CSV files in the project folder.
+3. Open `Cyclistic_Analysis.R` or `Cyclistic_bike_share_analysis.Rmd` in RStudio or your preferred IDE.
+4. Run the scripts or knit the RMarkdown file for a full analysis and report.
+
+---
+
+## 📂 Project Structure
+
+```
+Cyclistic-Bike-Share-Analysis/
+│
+├── Cyclistic_Analysis.R               # Main R analysis script
+├── Cyclistic_bike_share_analysis.Rmd  # RMarkdown report (HTML/Slides)
+├── README.md                          # This file
+├── /data                              # Data files (not included in repo)
+└── /output                            # Generated charts and reports
+```
+
+---
+
+## 📄 License
+
+This project is for educational purposes as part of the Google Data Analytics Certificate.
+
+---
+
+## 🙋‍♂️ Contact
+
+For questions, suggestions, or collaboration, please open an issue or contact [DavidAK431](https://github.com/DavidAK431).
